@@ -1,17 +1,11 @@
 package org.ericwubbo.restcontrolleradvicedemo;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +25,8 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<Item> create(@RequestBody Item item, UriComponentsBuilder uriComponentsBuilder) {
         if (item.getName() == null || item.getPrice().compareTo(BigDecimal.ZERO) <= 0 || item.getId() != null)
-            throw new BadRequestException();
+            throw new BadRequestException("Items must have a name, they cannot have a zero or negative price," +
+                    "and as their id will be assigned by the database, they should not have an id specified.");
         itemRepository.save(item);
         var location = uriComponentsBuilder.path("{id}").buildAndExpand(item.getId()).toUri();
         return ResponseEntity.created(location).body(item);
@@ -45,25 +40,21 @@ public class ItemController {
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
-        if (itemUpdates.getId() != null) return
-                ResponseEntity.of(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                        "A PATCH request should not have a (possibly conflicting) id in the body")).build();
+    public Item update(@PathVariable Long id, @RequestBody Item itemUpdates) {
+        if (itemUpdates.getId() != null)
+            throw new BadRequestException("A PATCH request should not have a (possibly conflicting) id in the body");
         Item item = itemRepository.findById(id).orElseThrow(NotFoundException::new);
         var newName = itemUpdates.getName();
         if (newName != null) { // a name has been specified
-            if (newName.isBlank()) return
-                    ResponseEntity.of(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                            "The name assigned to an item should not be blank")).build();
+            if (newName.isBlank()) throw new BadRequestException("The name assigned to an item should not be blank");
             item.setName(newName);
         }
         var newPrice = itemUpdates.getPrice();
         if (newPrice != null) { // a price has been specified
-            if (newPrice.compareTo(BigDecimal.ZERO) <= 0) return
-                    ResponseEntity.of(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                            "The price assigned to an item should not be zero or negative")).build();
+            if (newPrice.compareTo(BigDecimal.ZERO) <= 0)
+                throw new BadRequestException("The price assigned to an item should not be zero or negative");
             item.setPrice(newPrice);
         }
-        return ResponseEntity.ok(itemRepository.save(item));
+        return itemRepository.save(item);
     }
 }
