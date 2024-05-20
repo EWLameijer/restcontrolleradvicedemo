@@ -43,7 +43,7 @@ public class ItemController {
     @PatchMapping("{id}")
     public Item update(@PathVariable Long id, @RequestBody Item itemUpdates) {
         if (itemUpdates.getId() != null) throw new BadRequestException();
-        Item item = itemRepository.findById(id).orElseThrow(BadRequestException::new);
+        Item item = itemRepository.findById(id).orElseThrow(NotFoundException::new);
         var newName = itemUpdates.getName();
         if (newName != null) { // a name has been specified
             if (newName.isBlank()) throw new BadRequestException();
