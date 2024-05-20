@@ -11,4 +11,9 @@ public class ControllerAdvice {
     public ResponseEntity<Void> notFound() {
         return ResponseEntity.notFound().build();
     }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Void> badRequest() {
+        return ResponseEntity.badRequest().build();
+    }
 }

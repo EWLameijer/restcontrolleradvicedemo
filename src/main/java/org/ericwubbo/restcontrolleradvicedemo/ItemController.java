@@ -27,7 +27,7 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<Item> create(@RequestBody Item item, UriComponentsBuilder uriComponentsBuilder) {
         if (item.getName() == null || item.getPrice().compareTo(BigDecimal.ZERO) <= 0 || item.getId() != null)
-            return ResponseEntity.badRequest().build();
+            throw new BadRequestException();
         itemRepository.save(item);
         var location = uriComponentsBuilder.path("{id}").buildAndExpand(item.getId()).toUri();
         return ResponseEntity.created(location).body(item);
@@ -35,28 +35,25 @@ public class ItemController {
 
     @DeleteMapping("{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!itemRepository.existsById(id)) return ResponseEntity.notFound().build();
+        if (!itemRepository.existsById(id)) throw new NotFoundException();
         itemRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
-        if (itemUpdates.getId() != null) return ResponseEntity.badRequest().build();
-        Optional<Item> possibleItem = itemRepository.findById(id);
-        if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
-        Item item = possibleItem.get();
+    public Item update(@PathVariable Long id, @RequestBody Item itemUpdates) {
+        if (itemUpdates.getId() != null) throw new BadRequestException();
+        Item item = itemRepository.findById(id).orElseThrow(BadRequestException::new);
         var newName = itemUpdates.getName();
         if (newName != null) { // a name has been specified
-            if (newName.isBlank()) return ResponseEntity.badRequest().build();
+            if (newName.isBlank()) throw new BadRequestException();
             item.setName(newName);
         }
         var newPrice = itemUpdates.getPrice();
         if (newPrice != null) { // a price has been specified
-            if (newPrice.compareTo(BigDecimal.ZERO) <= 0) return ResponseEntity.badRequest().build();
+            if (newPrice.compareTo(BigDecimal.ZERO) <= 0) throw new BadRequestException();
             item.setPrice(newPrice);
         }
-        itemRepository.save(item);
-        return ResponseEntity.ok(item);
+        return itemRepository.save(item);
     }
 }
