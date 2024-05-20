@@ -1,6 +1,7 @@
 package org.ericwubbo.restcontrolleradvicedemo;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -19,8 +20,8 @@ public class ItemController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Item> getById(@PathVariable long id) {
-        return itemRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public Item getById(@PathVariable long id) {
+        return itemRepository.findById(id).orElseThrow(NotFoundException::new);
     }
 
     @PostMapping
