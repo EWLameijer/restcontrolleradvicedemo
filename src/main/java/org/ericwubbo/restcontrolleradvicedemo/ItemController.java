@@ -1,17 +1,13 @@
 package org.ericwubbo.restcontrolleradvicedemo;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,11 +40,15 @@ public class ItemController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("{id}")
-    public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
-        if (itemUpdates.getId() != null) return
+    private ResponseEntity<Void> returnBadRequestIfIdIsPresent(Long id) {
+        if (id != null) return
                 ResponseEntity.of(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                         "A PATCH request should not have a (possibly conflicting) id in the body")).build();
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
+        returnBadRequestIfIdIsPresent(itemUpdates.getId());
         Item item = itemRepository.findById(id).orElseThrow(NotFoundException::new);
         var newName = itemUpdates.getName();
         if (newName != null) { // a name has been specified
