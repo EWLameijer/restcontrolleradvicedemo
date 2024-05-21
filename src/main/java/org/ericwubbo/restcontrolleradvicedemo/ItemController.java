@@ -40,7 +40,7 @@ public class ItemController {
         return ResponseEntity.noContent().build();
     }
 
-    private ResponseEntity<Void> returnBadRequestIfIdIsPresent(Long id) {
+    private ResponseEntity<Item> returnBadRequestIfIdIsPresent(Long id) {
         if (id != null) return
                 ResponseEntity.of(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                         "A PATCH request should not have a (possibly conflicting) id in the body")).build();
