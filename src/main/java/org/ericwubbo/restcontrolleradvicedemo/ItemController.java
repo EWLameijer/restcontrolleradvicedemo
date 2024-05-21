@@ -49,7 +49,8 @@ public class ItemController {
 
     @PatchMapping("{id}")
     public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
-        returnBadRequestIfIdIsPresent(itemUpdates.getId());
+        var possibleResponse = returnBadRequestIfIdIsPresent(itemUpdates.getId());
+        if (possibleResponse != null) return possibleResponse;
         Item item = itemRepository.findById(id).orElseThrow(NotFoundException::new);
         var newName = itemUpdates.getName();
         if (newName != null) { // a name has been specified
