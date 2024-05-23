@@ -45,7 +45,7 @@ public class ItemController {
         Item item = itemRepository.findById(id).orElseThrow(NotFoundException::new);
         var newName = itemUpdates.getName();
         if (newName != null) { // a name has been specified
-            itemService.validNameOrThrowBadRequest(item);
+            itemService.validNameOrThrowBadRequest(itemUpdates);
             item.setName(newName);
         }
         var newPrice = itemUpdates.getPrice();
